@@ -1,12 +1,11 @@
-import pandas as pd
-import numpy as np
-from datetime import datetime
 import logging
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
+
 import joblib
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 
 # Set up logging
 logging.basicConfig(
@@ -24,18 +23,18 @@ def create_features(df):
     
     # Calculate Age buckets (non-linear risk)
     df_featured["age_group"] = pd.cut(
-    df_featured["age"],
-    bins=[0, 25, 35, 45, 55, 65, 100],
-    labels=["<25", "25-34", "35-44", "45-54", "55-64", "65+"]
-)
+        df_featured["age"],
+        bins=[0, 25, 35, 45, 55, 65, 100],
+        labels=["<25", "25-34", "35-44", "45-54", "55-64", "65+"],
+    )
     logger.info("Created 'age_group' feature")
     
     # BMI categories (medical standard)
     df_featured["bmi_category"] = pd.cut(
-    df_featured["bmi"],
-    bins=[0, 18.5, 25, 30, 100],
-    labels=["underweight", "normal", "overweight", "obese"]
-)
+        df_featured["bmi"],
+        bins=[0, 18.5, 25, 30, 100],
+        labels=["underweight", "normal", "overweight", "obese"],
+    )
     logger.info("Created 'bmi-categories' feature")
     
     # Smoker risk flag
@@ -44,7 +43,7 @@ def create_features(df):
 
     # High-risk BMI indicator
     df_featured["high_bmi"] = (df_featured["bmi"] >= 30).astype(int)
-    logger.info("Created 'high-bmi' indicator")
+    logger.info("Created 'age_smoker_interaction' feature")
 
     # Age × smoker interaction
     df_featured["age_smoker_interaction"] = df_featured["age"] * df_featured["is_smoker"]
@@ -56,26 +55,24 @@ def create_features(df):
 
     # Family size
     df_featured["family_size"] = df_featured["children"] + 1
-    logger.info("Created 'Family size")
+    logger.info("Created 'family_size' feature")
 
     # Large family flag
     df_featured["large_family"] = (df_featured["family_size"] >= 4).astype(int)
-    logger.info("Created Large family flag")
+    logger.info("Created 'large_family' flag")
     
     # Do NOT one-hot encode categorical variables here; let the preprocessor handle it
     return df_featured
 
-def create_preprocessor():
+def create_preprocessor(df_featured):
     """Create a preprocessing pipeline."""
     logger.info("Creating preprocessor pipeline")
-    df_featured = df.copy()
-    
     # Categorical = object or category
     categorical_features = df_featured.select_dtypes(
         include=["object", "category"]
     ).columns.tolist()
 
-# Numerical = ints + floats
+    # Numerical = ints + floats
     numerical_features = df_featured.select_dtypes(
         include=["int64", "float64"]
     ).columns.tolist()
@@ -111,8 +108,8 @@ def run_feature_engineering(input_file, output_file, preprocessor_file):
     logger.info(f"Created featured dataset with shape: {df_featured.shape}")
     
     # Create and fit the preprocessor
-    preprocessor = create_preprocessor()
     X = df_featured.drop(columns=['charges'], errors='ignore')  # Features only
+    preprocessor = create_preprocessor(X)
     y = df_featured['charges'] if 'charges' in df_featured.columns else None  # Target column (if available)
     X_transformed = preprocessor.fit_transform(X)
     logger.info("Fitted the preprocessor and transformed the features")
