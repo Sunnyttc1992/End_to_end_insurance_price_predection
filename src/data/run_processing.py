@@ -41,20 +41,20 @@ def clean_data(df):
     
     # Handle outliers in price (target variable)
     # Using IQR method to identify outliers
-    Q1 = df_cleaned['price'].quantile(0.25)
-    Q3 = df_cleaned['price'].quantile(0.75)
+    Q1 = df_cleaned['charges'].quantile(0.25)
+    Q3 = df_cleaned['charges'].quantile(0.75)
     IQR = Q3 - Q1
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
     
     # Filter out extreme outliers
-    outliers = df_cleaned[(df_cleaned['price'] < lower_bound) | 
-                          (df_cleaned['price'] > upper_bound)]
+    outliers = df_cleaned[(df_cleaned['charges'] < lower_bound) | 
+                          (df_cleaned['charges'] > upper_bound)]
     
     if not outliers.empty:
         logger.info(f"Found {len(outliers)} outliers in price column")
-        df_cleaned = df_cleaned[(df_cleaned['price'] >= lower_bound) & 
-                                (df_cleaned['price'] <= upper_bound)]
+        df_cleaned = df_cleaned[(df_cleaned['charges'] >= lower_bound) & 
+                                (df_cleaned['charges'] <= upper_bound)]
         logger.info(f"Removed outliers. New dataset shape: {df_cleaned.shape}")
     
     return df_cleaned
@@ -81,7 +81,7 @@ def process_data(input_file, output_file):
 if __name__ == "__main__":
     # Example usage
     process_data(
-        input_file="data/raw/house_data.csv", 
-        output_file="data/processed/cleaned_house_data.csv"
+        input_file="/workspaces/End_to_end_insurance_price_predection/data/raw/insurance.csv", 
+        output_file="/workspaces/End_to_end_insurance_price_predection/data/processed/clean_insurance.csv"
     )
     
